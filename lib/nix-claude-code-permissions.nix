@@ -1,3 +1,5 @@
+# WIP to sandbox claude-code
+# TODO: Blocked by https://github.com/anthropic-experimental/sandbox-runtime/issues/2
 { stdenvNoCC, jq }:
 { rootPaths }:
 
