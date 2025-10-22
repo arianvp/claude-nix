@@ -21,9 +21,6 @@ stdenvNoCC.mkDerivation {
     jq '
       {
         "permissions": {
-          "deny": [
-            "Read(//)"
-          ],
           "allow": (
             [.closure[] | .path] |
             map("Read(/\(.)/)")
