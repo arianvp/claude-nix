@@ -129,7 +129,7 @@
             mercury-marketplace = {
               source = {
                 source = "directory";
-                path = "./.claude/marketplaces/mercury-marketplace";
+                path = "./.claude-nix/marketplaces/mercury-marketplace";
               };
             };
           };
