@@ -4,11 +4,11 @@
 {
   name,
   description,
-  content,
   allowed-tools ? [ ],
 }:
+content:
 writeTextFile {
-  name = name;
+  inherit name;
   text = ''
     ---
     name: ${name}
@@ -17,5 +17,5 @@ writeTextFile {
     ---
     ${content}
   '';
-  destination = "/SKILL.md";
+  destination = "/skills/${name}/SKILL.md";
 }

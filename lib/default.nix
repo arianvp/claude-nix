@@ -8,5 +8,5 @@
 
   mkPlugin = pkgs.callPackage ./mkPlugin.nix { };
 
-  mkMarketplace = pkgs.callPackage ./mkMarketplace.nix { };
+  mkClaude = pkgs.callPackage ./mkClaude.nix { };
 }
