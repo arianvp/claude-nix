@@ -69,6 +69,7 @@
             ];
           };
           skills = [
+	    ./skills/joke-teller
             (claudeLib.mkSkill {
               name = "procastinator";
               description = "Procastinate by browsing to xkcd";
@@ -80,10 +81,39 @@
               '';
             })
           ];
+          commands = [
+            (claudeLib.mkCommand {
+              name = "browse-xkcd";
+              description = "Browse to xkcd and explain the current comic";
+              allowed-tools = [ "chromium__navigate_page" ];
+              argument-hint = "[comic number]";
+              content = ''
+                Browse to https://xkcd.com (or https://xkcd.com/$1 if a comic number is provided).
+                Explain the joke in the comic to the user.
+              '';
+            })
+          ];
+          agents = [
+            (claudeLib.mkAgent {
+              name = "xkcd-explainer";
+              description = "Specialized agent for explaining xkcd comics";
+              tools = [
+                "chromium__navigate_page"
+                "chromium__take_snapshot"
+              ];
+              content = ''
+                You are an expert at explaining xkcd comics. When given an xkcd URL or comic number:
+                1. Navigate to the comic
+                2. Take a snapshot to see it
+                3. Provide a detailed explanation of the joke, including any relevant context
+                4. Explain technical references if applicable
+              '';
+            })
+          ];
         };
 
         # Example marketplace using the plugins
-        packages.example-marketplace = claudeLib.mkMarketplace {
+        packages.mercury-marketplace = claudeLib.mkMarketplace {
           name = "mercury-marketplace";
           owner = {
             name = "Arian van Putten";
@@ -99,7 +129,7 @@
             mercury-marketplace = {
               source = {
                 source = "directory";
-                path = self.packages.${system}.example-marketplace;
+                path = "./.claude/marketplaces/mercury-marketplace";
               };
             };
           };
@@ -119,7 +149,9 @@
           ];
           text = ''
             # TODO: This should really be a nix store path instead of a static name
-            claude plugin marketplace rm mercury-marketplace
+	    # Claude really wants the marketplace be a directory that doesn't change; else it doesn't pick it up
+	    mkdir -p .claude-nix/marketplaces
+	    nix build .#mercury-marketplace --profile .claude-nix/marketplaces/mercury-marketplace
             claude --settings ${self.packages.${system}.settings} "$@"
           '';
         };
