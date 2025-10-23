@@ -124,36 +124,14 @@
           ];
         };
 
-        packages.settings = (pkgs.formats.json { }).generate "settings.json" {
-          extraKnownMarketplaces = {
-            mercury-marketplace = {
-              source = {
-                source = "directory";
-                path = "./.claude-nix/marketplaces/mercury-marketplace";
-              };
-            };
+        packages.claude-code = claudeLib.mkClaudeCode {
+          marketplaces = {
+            mercury-marketplace = self.packages.${system}.mercury-marketplace;
           };
           enabledPlugins = {
             "procastinator@mercury-marketplace" = true;
             "nix@mercury-marketplace" = true;
           };
-        };
-
-        packages.claude-code = pkgs.writeShellApplication {
-          name = "claude-code";
-          runtimeInputs = [
-            pkgs.claude-code
-            # needed for claude-code's new sandbox
-            pkgs.socat
-            pkgs.bubblewrap
-          ];
-          text = ''
-            # TODO: This should really be a nix store path instead of a static name
-	    # Claude really wants the marketplace be a directory that doesn't change; else it doesn't pick it up
-	    mkdir -p .claude-nix/marketplaces
-	    nix build .#mercury-marketplace --profile .claude-nix/marketplaces/mercury-marketplace
-            claude --settings ${self.packages.${system}.settings} "$@"
-          '';
         };
 
       }
