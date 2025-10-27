@@ -69,7 +69,7 @@
             ];
           };
           skills = [
-	    ./skills/joke-teller
+            ./skills/joke-teller
             (claudeLib.mkSkill {
               name = "procastinator";
               description = "Procastinate by browsing to xkcd";
@@ -149,9 +149,9 @@
           ];
           text = ''
             # TODO: This should really be a nix store path instead of a static name
-	    # Claude really wants the marketplace be a directory that doesn't change; else it doesn't pick it up
-	    mkdir -p .claude-nix/marketplaces
-	    nix build .#mercury-marketplace --profile .claude-nix/marketplaces/mercury-marketplace
+            # Claude really wants the marketplace be a directory that doesn't change; else it doesn't pick it up
+            mkdir -p .claude-nix/marketplaces
+            nix build .#mercury-marketplace --profile .claude-nix/marketplaces/mercury-marketplace
             claude --settings ${self.packages.${system}.settings} "$@"
           '';
         };

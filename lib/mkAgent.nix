@@ -19,10 +19,7 @@ let
   # Convert attributes to YAML frontmatter
   formatValue =
     key: value:
-    if builtins.isBool value then
-      "${key}: ${lib.boolToString value}"
-    else
-      "${key}: ${value}";
+    if builtins.isBool value then "${key}: ${lib.boolToString value}" else "${key}: ${value}";
 
   lines = lib.mapAttrsToList formatValue frontmatterAttrs;
 
@@ -33,7 +30,7 @@ let
   '';
 in
 writeTextFile {
-  name = name;
+  inherit name;
   text = ''
     ${frontmatter}
     ${content}

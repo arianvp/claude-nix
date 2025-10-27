@@ -15,7 +15,8 @@ let
   json = formats.json { };
 
   # Normalize skills to handle both plain paths and derivations
-  normalizeSkill = skill:
+  normalizeSkill =
+    skill:
     if builtins.isPath skill then
       # For plain paths, extract the basename as the name
       let
@@ -28,7 +29,7 @@ let
     else
       # For derivations, use the .name attribute
       {
-        name = skill.name;
+        inherit (skill) name;
         path = skill;
       };
 
