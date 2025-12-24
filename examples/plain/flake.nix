@@ -161,7 +161,14 @@
               '';
             })
           ];
-
+          lspServers = {
+            nix = {
+              command = lib.getExe pkgs.nixd;
+              extensionToLanguage = {
+                ".nix" = "nix";
+              };
+            };
+          };
           commands = [
             (claudeLib.mkCommand {
               name = "format-nix";

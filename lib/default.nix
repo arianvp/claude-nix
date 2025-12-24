@@ -8,8 +8,6 @@
 
   mkPlugin = pkgs.callPackage ./mkPlugin.nix { };
 
-  mkMarketplace = pkgs.callPackage ./mkMarketplace.nix { };
-
   mkClaudeCode = pkgs.callPackage ./mkClaudeCode.nix { };
 
   # Direct .claude directory builder (no marketplace abstraction)
