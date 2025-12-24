@@ -28,6 +28,116 @@
         claudeLib = claude-nix.lib.${system};
       in
       {
+
+        packages.mcp-servers = pkgs.callPackage ./mcp-servers { };
+
+        packages.plugin-chromium = claudeLib.mkPlugin {
+          name = "chromium";
+          description = "Chromium Devtools MCP";
+          mcpServers.chromium = {
+            command = "${self.packages.${system}.mcp-servers}/node_modules/.bin/chrome-devtools-mcp";
+            args = [
+              "--executablePath"
+              (lib.getExe pkgs.chromium)
+            ];
+          };
+          skills = [
+            (claudeLib.mkSkill {
+              name = "webpage-to-screenshot";
+              description = "Turns a webpage into a screenshot";
+              allowed-tools = [
+                "mcp__plugin_chromium_chromium__navigate_page"
+                "mcp__plugin_chromium_chromium__take_screenshot"
+              ];
+              content = ''
+                Navigates to a page using the mcp__plugin_chromium_chromium__navigate_page tool and then takes a screenshot using mcp__plugin_chromium_chromium__take_screenshot
+              '';
+            })
+            (claudeLib.mkSkill {
+              name = "web-performance-audit";
+              description = "Comprehensive performance audit of a webpage with Core Web Vitals, network analysis, and error detection";
+              allowed-tools = [
+                "mcp__plugin_chromium_chromium__navigate_page"
+                "mcp__plugin_chromium_chromium__new_page"
+                "mcp__plugin_chromium_chromium__performance_start_trace"
+                "mcp__plugin_chromium_chromium__performance_stop_trace"
+                "mcp__plugin_chromium_chromium__performance_analyze_insight"
+                "mcp__plugin_chromium_chromium__list_network_requests"
+                "mcp__plugin_chromium_chromium__get_network_request"
+                "mcp__plugin_chromium_chromium__list_console_messages"
+                "mcp__plugin_chromium_chromium__get_console_message"
+                "mcp__plugin_chromium_chromium__take_screenshot"
+                "mcp__plugin_chromium_chromium__take_snapshot"
+              ];
+              content = ''
+                You are a web performance expert. When asked to audit a webpage, follow this comprehensive workflow:
+
+                ## Audit Workflow
+
+                1. **Navigate & Start Tracing**
+                   - Navigate to the target URL
+                   - Start a performance trace with automatic page reload
+                   - This captures Core Web Vitals and performance metrics
+
+                2. **Stop Trace & Analyze Results**
+                   - Stop the performance trace
+                   - Review Core Web Vitals (LCP, FID, CLS, etc.)
+                   - Identify performance insights and bottlenecks
+                   - For any critical insights, use performance_analyze_insight to get detailed information
+
+                3. **Network Analysis**
+                   - List all network requests from the page load
+                   - Identify slow requests (>1s response time)
+                   - Find large resources (>500KB)
+                   - Check for failed requests (status 4xx/5xx)
+                   - Get detailed information on problematic requests
+
+                4. **Console Error Detection**
+                   - List all console messages
+                   - Filter for errors and warnings
+                   - Get full details of any critical errors
+                   - Report JavaScript errors, CSP violations, etc.
+
+                5. **Visual Capture**
+                   - Take a screenshot of the page in its final state
+                   - This helps visualize layout issues or rendering problems
+
+                6. **Generate Comprehensive Report**
+                   Provide a structured report with:
+                   - **Executive Summary**: Overall performance grade (A/B/C/D/F)
+                   - **Core Web Vitals**: LCP, FID, CLS scores with pass/fail
+                   - **Performance Insights**: Top 3-5 issues affecting speed
+                   - **Network Issues**: Slow/failed/large requests
+                   - **JavaScript Errors**: Critical errors found
+                   - **Recommendations**: Prioritized action items
+                   - **Screenshot**: Visual reference
+
+                ## Best Practices
+
+                - Always wait for traces to complete fully
+                - Prioritize insights by impact (high/medium/low)
+                - Be specific in recommendations (not just "optimize images")
+                - Compare metrics against Web Vitals thresholds:
+                  - LCP: Good <2.5s, Needs Improvement 2.5-4s, Poor >4s
+                  - FID: Good <100ms, Needs Improvement 100-300ms, Poor >300ms
+                  - CLS: Good <0.1, Needs Improvement 0.1-0.25, Poor >0.25
+                - Group related issues together (e.g., all render-blocking resources)
+
+                ## Example Usage
+
+                User: "Audit https://example.com"
+
+                You should:
+                1. Navigate and trace the page
+                2. Analyze all performance data
+                3. Check network and console
+                4. Screenshot the result
+                5. Deliver a clear, actionable report
+              '';
+            })
+          ];
+        };
+
         # Define plugins using mkPlugin
         packages.plugin-nix = claudeLib.mkPlugin {
           name = "nix";
@@ -97,33 +207,27 @@
         };
 
         # Build a claude wrapper that loads plugins via --plugin-dir
-        packages.claude-code = claudeLib.mkClaude {
-          plugins = [
-            self.packages.${system}.plugin-nix
-          ];
-          # Optional: Add extra CLI arguments
-          # extraArgs = [ "--model" "opus" ];
-        };
+        packages.claude-code =
 
-        # Example: Using external plugins from GitHub
-        # Fetch and use plugins directly from the official Claude plugins repository
-        packages.claude-with-github =
           let
             # Fetch the official Claude plugins repository
             claude-plugins-official = pkgs.fetchFromGitHub {
               owner = "anthropics";
               repo = "claude-plugins-official";
-              rev = "main"; 
+              rev = "main";
               hash = "sha256-JZNy8pFiYe2+vGkXO3jlBz0GGB1m95AWScNcHAL8kxM=";
             };
-            github-plugin = "${claude-plugins-official}/external_plugins/github";
+            plugin-github = "${claude-plugins-official}/external_plugins/github";
           in
+
           claudeLib.mkClaude {
             plugins = [
-              # Mix your own plugins with external ones from GitHub
               self.packages.${system}.plugin-nix
-              github-plugin
+              self.packages.${system}.plugin-chromium
+              plugin-github
             ];
+            # Optional: Add extra CLI arguments
+            # extraArgs = [ "--model" "opus" ];
           };
 
         packages.default = self.packages.${system}.claude-code;
