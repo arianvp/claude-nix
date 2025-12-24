@@ -4,7 +4,11 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable-small";
     flake-utils.url = "github:numtide/flake-utils";
     # Can also use: github:yourorg/claude-nix for remote
-    claude-nix.url = "path:../..";
+    claude-nix = {
+      url = "path:../..";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   };
   outputs =
     {
@@ -47,6 +51,7 @@
               '';
             })
           ];
+
           commands = [
             (claudeLib.mkCommand {
               name = "format-nix";
@@ -91,40 +96,35 @@
           ];
         };
 
-        # Build a .claude directory by merging plugins
-        packages.claude-config = claudeLib.mkClaude {
+        # Build a claude wrapper that loads plugins via --plugin-dir
+        packages.claude-code = claudeLib.mkClaude {
           plugins = [
             self.packages.${system}.plugin-nix
           ];
+          # Optional: Add extra CLI arguments
+          # extraArgs = [ "--model" "opus" ];
+        };
 
-          # Optional: Add MCP servers and settings
-          mcpServers = {
-            # Example MCP server configuration
-            # chromium = {
-            #   command = "${pkgs.chrome-devtools-mcp}/bin/chrome-devtools-mcp";
-            #   args = [ "--executablePath" "${lib.getExe pkgs.chromium}" ];
-            # };
+        # Example: Using external plugins from GitHub
+        # Fetch and use plugins directly from the official Claude plugins repository
+        packages.claude-with-github =
+          let
+            # Fetch the official Claude plugins repository
+            claude-plugins-official = pkgs.fetchFromGitHub {
+              owner = "anthropics";
+              repo = "claude-plugins-official";
+              rev = "main"; 
+              hash = "sha256-JZNy8pFiYe2+vGkXO3jlBz0GGB1m95AWScNcHAL8kxM=";
+            };
+            github-plugin = "${claude-plugins-official}/external_plugins/github";
+          in
+          claudeLib.mkClaude {
+            plugins = [
+              # Mix your own plugins with external ones from GitHub
+              self.packages.${system}.plugin-nix
+              github-plugin
+            ];
           };
-        };
-
-        # Wrapper script that sets up the config and runs claude
-        packages.claude-code = pkgs.writeShellApplication {
-          name = "claude-code";
-          runtimeInputs = [
-            pkgs.claude-code
-            pkgs.socat
-            pkgs.bubblewrap
-            pkgs.nix # Needed for nix build
-          ];
-          text = ''
-            # Build the claude config into .claude profile
-            nix build .#claude-config --profile .claude
-
-            # Run claude with the config directory
-            export CLAUDE_CONFIG_DIR="$PWD/.claude"
-            claude "$@"
-          '';
-        };
 
         packages.default = self.packages.${system}.claude-code;
       }

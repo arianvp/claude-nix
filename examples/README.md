@@ -4,24 +4,26 @@ This directory contains two approaches to managing Claude Code configuration wit
 
 ## Two Patterns
 
-### 1. [Plain Pattern](./plain/) - Direct `.claude` Directory
+### 1. [Plain Pattern](./plain/) - Using `--plugin-dir`
 
-The simplest approach: build a `.claude` directory directly.
+The simplest approach: use Claude's native `--plugin-dir` flag.
 
 ```bash
-nix build .#claude-config --profile .claude
+nix run .#claude-code
 ```
 
 **When to use:**
 - Project-specific configurations
 - Simple, straightforward setup
 - You don't need to share config across projects
+- You want to avoid Claude's plugin manager
 
 **Key features:**
-- Uses `mkClaude` function
-- Still uses helper functions (`mkSkill`, `mkCommand`, `mkAgent`)
-- Direct control over the directory structure
-- No marketplace abstraction overhead
+- Uses `mkClaude` to create a wrapper script
+- Still uses `mkPlugin`, `mkSkill`, `mkCommand`, `mkAgent`
+- Leverages Claude's native `--plugin-dir` flag
+- No marketplace or plugin manager overhead
+- Plugins stay isolated in the Nix store
 
 ### 2. [Marketplace Pattern](./marketplace/) - Plugin System
 
@@ -48,7 +50,8 @@ nix build .#claude-code --profile .claude
 | Feature | Plain | Marketplace |
 |---------|-------|-------------|
 | Complexity | Low | Medium |
-| Setup | `nix build .#claude-config --profile .claude` | `nix build .#claude-code --profile .claude` |
+| Setup | `nix run .#claude-code` | `nix build .#claude-code --profile .claude` |
+| Plugin loading | `--plugin-dir` flags | Marketplace system |
 | Sharing | Manual | Built-in |
 | Dynamic enable/disable | No | Yes |
 | Versioning | Manual | Built-in |
@@ -57,13 +60,14 @@ nix build .#claude-code --profile .claude
 ## Both Use the Same Building Blocks
 
 Both patterns use the same helper functions:
+- `mkPlugin` - Creates a plugin with `.claude-plugin/plugin.json`
 - `mkSkill` - Creates a skill with frontmatter
 - `mkCommand` - Creates a slash command
 - `mkAgent` - Creates an agent definition
 
-The difference is how they're organized:
-- **Plain**: `mkClaude { skills = [...]; commands = [...]; }`
-- **Marketplace**: `mkPlugin {...}` → `mkMarketplace {...}` → `mkClaudeCode {...}`
+The difference is how they're loaded:
+- **Plain**: `mkClaude { plugins = [...] }` → Wrapper with `--plugin-dir` flags
+- **Marketplace**: `mkPlugin {...}` → `mkMarketplace {...}` → `mkClaudeCode {...}` → `.claude-nix/marketplaces/`
 
 ## Getting Started
 

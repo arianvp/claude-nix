@@ -7,6 +7,7 @@
   name,
   description,
   mcpServers ? { },
+  lspServers ? { },
   skills ? [ ],
   commands ? [ ],
   agents ? [ ],
@@ -38,7 +39,7 @@ let
   # Extract skill names from skill derivations
   # The skill name is the derivation name (e.g., "pedantic-nixer")
   pluginJson = json.generate "${name}.json" {
-    inherit name description mcpServers;
+    inherit name description mcpServers lspServers;
     skills = map (skill: "./skills/${skill.name}") normalizedSkills;
     commands = map (command: "./commands/${command.name}.md") commands;
     agents = map (agent: "./agents/${agent.name}.md") agents;
