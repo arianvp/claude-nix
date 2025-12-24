@@ -1,16 +1,17 @@
 {
-  description = "Claude Nix";
+  description = "Example: Claude Code with marketplace pattern";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable-small";
     flake-utils.url = "github:numtide/flake-utils";
-    treefmt-nix.url = "github:numtide/treefmt-nix";
+    # Can also use: github:yourorg/claude-nix for remote
+    claude-nix.url = "path:../..";
   };
   outputs =
     {
       self,
       nixpkgs,
       flake-utils,
-      treefmt-nix,
+      claude-nix,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -20,21 +21,9 @@
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
         };
         inherit (nixpkgs) lib;
-        treefmtEval = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
-
-        # Import library functions
-        claudeLib = import ./lib { inherit pkgs; };
+        claudeLib = claude-nix.lib.${system};
       in
       {
-        formatter = treefmtEval.config.build.wrapper;
-
-        checks.formatting = treefmtEval.config.build.check self;
-
-        packages.mcp-servers = pkgs.callPackage ./mcp-servers { };
-
-        # Export library functions for use by other flakes
-        lib = claudeLib;
-
         # Example plugins
         packages.plugin-nix = claudeLib.mkPlugin {
           name = "nix";
@@ -62,14 +51,21 @@
           name = "procastinator";
           description = "Browses hacker news using Chromium's built-in MCP";
           mcpServers.chromium = {
-            command = "${self.packages.${system}.mcp-servers}/node_modules/.bin/chrome-devtools-mcp";
+            command = "${claude-nix.packages.${system}.mcp-servers}/node_modules/.bin/chrome-devtools-mcp";
             args = [
               "--executablePath"
               (lib.getExe pkgs.chromium)
             ];
           };
           skills = [
-            ./skills/joke-teller
+            (claudeLib.mkSkill {
+              name = "joke-teller";
+              description = "Tells a funny joke";
+              allowed-tools = [ ];
+              content = ''
+                Tell the user a programming joke.
+              '';
+            })
             (claudeLib.mkSkill {
               name = "procastinator";
               description = "Procastinate by browsing to xkcd";
@@ -124,8 +120,6 @@
           ];
         };
 
-        # Example: Claude Code using marketplace pattern
-        # For a complete example, see ./examples/marketplace/flake.nix
         packages.claude-code = claudeLib.mkClaudeCode {
           marketplaces = {
             inherit (self.packages.${system}) mercury-marketplace;
@@ -136,18 +130,7 @@
           };
         };
 
-        # Example: Plain .claude directory without marketplace
-        # Just merge plugins together - reuses the same mkPlugin abstraction!
-        # For a complete example, see ./examples/plain/flake.nix
-        packages.claude-config-plain = claudeLib.mkClaude {
-          plugins = [
-            # Can reuse the same plugins defined above!
-            self.packages.${system}.plugin-nix
-            self.packages.${system}.plugin-procastinator
-          ];
-        };
-
+        packages.default = self.packages.${system}.claude-code;
       }
-
     );
 }

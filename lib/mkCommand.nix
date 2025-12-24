@@ -16,7 +16,7 @@ let
   frontmatterAttrs = lib.filterAttrs (_: v: v != null && v != [ ]) {
     inherit description model;
     allowed-tools = if allowed-tools != [ ] then allowed-tools else null;
-    argument-hint = argument-hint;
+    inherit argument-hint;
     disable-model-invocation = if disable-model-invocation then true else null;
   };
 
@@ -43,7 +43,7 @@ let
       "";
 in
 writeTextFile {
-  name = name;
+  inherit name;
   text = ''
     ${frontmatter}${content}
   '';

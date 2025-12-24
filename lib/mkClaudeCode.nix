@@ -26,29 +26,27 @@ let
   settingsConfig = {
     inherit extraKnownMarketplaces;
     inherit enabledPlugins;
-  } // extraSettings;
+  }
+  // extraSettings;
 
   settingsFile = json.generate "settings.json" settingsConfig;
 
   # Extract marketplace package names and build commands
   # Each marketplace derivation gets built and linked
-  marketplaceBuilds = lib.mapAttrsToList (
-    name: marketplace: ''
-      mkdir -p .claude-nix/marketplaces
-      nix build .#${name} --profile .claude-nix/marketplaces/${name}
-    ''
-  ) marketplaces;
+  marketplaceBuilds = lib.mapAttrsToList (name: marketplace: ''
+    mkdir -p .claude-nix/marketplaces
+    nix build .#${name} --profile .claude-nix/marketplaces/${name}
+  '') marketplaces;
 in
 writeShellApplication {
   name = "claude-code";
-  runtimeInputs =
-    [
-      pkgs.claude-code
-      # needed for claude-code's new sandbox
-      pkgs.socat
-      pkgs.bubblewrap
-    ]
-    ++ extraRuntimeInputs;
+  runtimeInputs = [
+    pkgs.claude-code
+    # needed for claude-code's new sandbox
+    pkgs.socat
+    pkgs.bubblewrap
+  ]
+  ++ extraRuntimeInputs;
   text = ''
     # Build and link marketplaces
     ${lib.concatStringsSep "\n" marketplaceBuilds}

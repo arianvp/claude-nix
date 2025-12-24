@@ -8,7 +8,7 @@
   allowed-tools ? [ ],
 }:
 writeTextFile {
-  name = name;
+  inherit name;
   text = ''
     ---
     name: ${name}

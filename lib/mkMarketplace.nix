@@ -22,10 +22,12 @@ let
   };
 
   # Build plugins directory by linking each plugin to its name
-  pluginsDir = linkFarm "${name}-plugins" (map (plugin: {
-    name = plugin.name;
-    path = plugin;
-  }) plugins);
+  pluginsDir = linkFarm "${name}-plugins" (
+    map (plugin: {
+      inherit (plugin) name;
+      path = plugin;
+    }) plugins
+  );
 in
 runCommand "claude-marketplace-${name}" { } ''
   mkdir -p $out/.claude-plugin
