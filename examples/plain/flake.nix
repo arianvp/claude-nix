@@ -229,9 +229,6 @@
 
           claudeLib.mkClaude {
             plugins = [
-              self.packages.${system}.plugin-nix
-              self.packages.${system}.plugin-chromium
-              plugin-github
             ];
             # Optional: Add extra CLI arguments
             # extraArgs = [ "--model" "opus" ];
