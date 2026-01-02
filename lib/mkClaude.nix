@@ -5,19 +5,14 @@
 }:
 {
   plugins ? [ ],
-  extraArgs ? [ ],
 }:
 let
-  # Generate --plugin-dir flags for each plugin
-  pluginDirFlags = lib.concatMapStringsSep " " (plugin: "--plugin-dir ${plugin}") plugins;
-
-  # Combine all extra args
-  allExtraArgs = lib.concatStringsSep " " extraArgs;
+  pluginDirFlags = lib.cli.toCommandLineShellGNU {} { plugin-dir = plugins; };
 in
 writeShellApplication {
   name = "claude";
   runtimeInputs = [ pkgs.claude-code ];
   text = ''
-    exec claude ${pluginDirFlags} ${allExtraArgs} "$@"
+    exec claude ${pluginDirFlags} "$@"
   '';
 }
