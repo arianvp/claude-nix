@@ -47,5 +47,5 @@ writeTextFile {
   text = ''
     ${frontmatter}${content}
   '';
-  destination = "/${name}.md";
+  destination = "commands/${name}.md";
 }

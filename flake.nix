@@ -25,6 +25,17 @@
       {
         # Export library functions for use by other flakes
         lib = claudeLib;
+        packages.default = claudeLib.mkClaude {
+          plugins = claudeLib.mkPlugin {
+            name = "pandoc";
+            description = "pandoc";
+            skills = [
+              (pkgs.callPackage ./skills/pandoc.nix {
+                inherit claudeLib;
+              })
+            ];
+          };
+        };
       }
     );
 }
