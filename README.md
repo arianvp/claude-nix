@@ -2,6 +2,22 @@
 
 Manage Claude Code with Nix!
 
+## Usage
+
+This will drop you into a claude code session with
+a few plugins managed by this repo loaded.
+
+```
+nix run .
+```
+
+### Examples:
+
+See [./flake.nix](./flake.nix) for full example.
+
+* `plugin-nix` ships `nixd` lsp, and a skill to run `statix` and `nixfmt`. It shows off how to install LSPs using nix, and have skills refer to binaries from nixpkgs.
+* `plugin-chromium` ships the Chromium Devtools MCP,, and a skill to do webpage audits. It shows off how to install MCPs using nix.
+* `plugin-pandoc` ships a skill to convert to PDF using `pandoc` and `texlive`. IT shows off how to have skills refer to binaries from nixpkgs.
 
 ## Why?
 
